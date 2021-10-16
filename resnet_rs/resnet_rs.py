@@ -1,5 +1,7 @@
 """Architecture code for Resnet RS models."""
 
+import sys
+
 import tensorflow as tf
 
 BLOCK_ARGS = {
@@ -46,6 +48,13 @@ BLOCK_ARGS = {
         {"input_filters": 512, "num_repeats": 4},
     ],
 }
+
+
+def _allow_bigger_recursion(target_limit: int):
+    """Increase default recursion limit to create larger models."""
+    current_limit = sys.getrecursionlimit()
+    if current_limit < target_limit:
+        sys.setrecursionlimit(target_limit)
 
 
 def fixed_padding(inputs, kernel_size):
@@ -402,14 +411,17 @@ def ResNetRS200():
 
 def ResNetRS270():
     """Build ResNet-RS-270 model."""
+    _allow_bigger_recursion(1100)
     return ResNetRS(depth=270)
 
 
 def ResNetRS350():
     """Build ResNet-RS350 model."""
+    _allow_bigger_recursion(1500)
     return ResNetRS(depth=350)
 
 
-def ResnetRS420(input_shape=(160, 160, 3)):
-    """Build Resnet-RS50 model."""
-    return ResNetRS(depth=50, input_shape=input_shape)
+def ResNetRS420():
+    """Build ResNet-RS420 model."""
+    _allow_bigger_recursion(1700)
+    return ResNetRS(depth=420)
