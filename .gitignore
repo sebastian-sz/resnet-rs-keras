@@ -130,3 +130,7 @@ dmypy.json
 
 # IDE files
 .idea/
+
+# Weight files
+weights/*.h5
+weights/original_weights/resnet-rs-*
