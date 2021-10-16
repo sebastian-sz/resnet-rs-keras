@@ -4,6 +4,7 @@ on:
     branches: [main]
 
 jobs:
+  # Run Lint Job
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -16,3 +17,24 @@ jobs:
         run: |
           pip install -r requirements.txt
           make lint
+
+  # Run all tests:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tensorflow-version: [ 2.2, 2.3, 2.4, 2.5, 2.6 ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install dependencies (TF version ${{ matrix.tensorflow-version }})
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install tensorflow~=${{matrix.tensorflow-version}}
+#          pip install -r tests/requirements.txt
+          pip install -e .
+      - name: Run tests
+        run: make test
