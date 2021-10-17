@@ -26,5 +26,5 @@ repos:
         args:
         - --max-line-length=88
         - --ignore=D107,W503,D402,D100
-        - --exclude=test*
+        - --exclude=test*.py,docs/*
         additional_dependencies: [flake8-docstrings]
