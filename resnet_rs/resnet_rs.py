@@ -349,7 +349,7 @@ def BlockGroup(
 
 def ResNetRS(
     depth: int,
-    input_shape=(224, 224, 3),
+    input_shape=(None, None, 3),  # TODO: make this more, keras like.
     bn_momentum=0,  # Todo not 0.9?
     bn_epsilon=1e-5,
     activation: str = "relu",
