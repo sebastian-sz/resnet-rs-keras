@@ -21,3 +21,5 @@ for val1 in ${ModelNamesArray[*]}; do
      mkdir -p weights/original_weights/$val1
      curl https://storage.googleapis.com/cloud-tpu-checkpoints/resnet-rs/$val1.tar.gz | tar xz -C weights/original_weights/$val1
 done
+
+python scripts/add_ckpt_to_missing_directories.py
