@@ -1,4 +1,5 @@
 import os
+from typing import Callable
 
 import numpy as np
 import tensorflow as tf
@@ -18,7 +19,7 @@ from root_dir import ROOT_DIR
 # TODO: refactor this
 
 OUTPUT_CONSISTENCY_TEST_PARAMS = [
-    {  # OK
+    {
         "testcase_name": "50-i160",
         "model_fn": ResNetRS50,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-50-i160.h5"),
@@ -27,7 +28,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs50_i160_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "101-i160",
         "model_fn": ResNetRS101,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i160.h5"),
@@ -36,7 +37,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs101_i160_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "101-i192",
         "model_fn": ResNetRS101,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i192.h5"),
@@ -45,7 +46,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs101_i192_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "152-i192",
         "model_fn": ResNetRS152,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i192.h5"),
@@ -54,7 +55,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs152_i192_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "152-i224",
         "model_fn": ResNetRS152,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i224.h5"),
@@ -63,7 +64,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs152_i224_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "152-i256",
         "model_fn": ResNetRS152,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i256.h5"),
@@ -72,7 +73,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs152_i256_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "200-i256",
         "model_fn": ResNetRS200,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-200-i256.h5"),
@@ -81,7 +82,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs200_i256_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "270-i256",
         "model_fn": ResNetRS270,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-270-i256.h5"),
@@ -90,7 +91,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs270_i256_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "350-i256",
         "model_fn": ResNetRS350,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i256.h5"),
@@ -99,7 +100,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs350_i256_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "350-i320",
         "model_fn": ResNetRS350,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i320.h5"),
@@ -108,7 +109,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
             "tests/assets/original_outputs/resnetrs350_i320_original_logits.npy",
         ),
     },
-    {  # OK
+    {
         "testcase_name": "420-i320",
         "model_fn": ResNetRS420,
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-420-i320.h5"),
@@ -119,6 +120,64 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
     },
 ]
 
+FEATURE_EXTRACTION_TEST_PARAMS = [
+    {
+        "testcase_name": "fe-101-i160",
+        "model_fn": ResNetRS101,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i160_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-101-i192",
+        "model_fn": ResNetRS101,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i192_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-152-i192",
+        "model_fn": ResNetRS152,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i192_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-152-i224",
+        "model_fn": ResNetRS152,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i224_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-152-i256",
+        "model_fn": ResNetRS152,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i256_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-200-i256",
+        "model_fn": ResNetRS200,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-200-i256_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-270-i256",
+        "model_fn": ResNetRS270,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-270-i256_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-350-i256",
+        "model_fn": ResNetRS350,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i256_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-350-i320",
+        "model_fn": ResNetRS350,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i320_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-50-i160",
+        "model_fn": ResNetRS50,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-50-i160_notop.h5"),
+    },
+    {
+        "testcase_name": "fe-420-i320",
+        "model_fn": ResNetRS420,
+        "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-420-i320_notop.h5"),
+    },
+]
+
 
 class TestLocalOutputConsistency(parameterized.TestCase):
     IMAGE_PATH = os.path.join(ROOT_DIR, "tests/assets/panda.jpg")
@@ -126,6 +185,8 @@ class TestLocalOutputConsistency(parameterized.TestCase):
     CROP_PADDING = 32
     MEAN_RGB = [0.485 * 255, 0.456 * 255, 0.406 * 255]
     STDDEV_RGB = [0.229 * 255, 0.224 * 255, 0.225 * 255]
+
+    rng = tf.random.Generator.from_seed(1234)
 
     @parameterized.named_parameters(OUTPUT_CONSISTENCY_TEST_PARAMS)
     def test_output_consistency(self, model_fn, weights_path, original_outputs):
@@ -176,6 +237,20 @@ class TestLocalOutputConsistency(parameterized.TestCase):
         image = tf.image.decode_and_crop_jpeg(image_bytes, crop_window, channels=3)
         image = tf.compat.v1.image.resize_bicubic([image], [image_size, image_size])[0]
         return image
+
+    @parameterized.named_parameters(FEATURE_EXTRACTION_TEST_PARAMS)
+    def test_feature_extraction_with_converted_weights(
+        self, model_fn: Callable, weights_path: str
+    ):
+        model = model_fn(include_top=False)
+        model.load_weights(weights_path)
+
+        mock_input = self.rng.uniform((1, 224, 224, 3))
+        expected_output_shape = (1, 7, 7, 2048)
+
+        output = model(mock_input, training=False)
+
+        self.assertEqual(output.shape, expected_output_shape)
 
 
 if __name__ == "__main__":

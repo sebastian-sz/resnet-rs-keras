@@ -12,8 +12,6 @@ from resnet_rs.resnet_rs import (
     ResNetRS420,
 )
 
-# TODO: include_top option.
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_enum(
@@ -24,6 +22,9 @@ flags.DEFINE_enum(
 )
 flags.DEFINE_string("ckpt", default="", help="Path to directory with ckpt files.")
 flags.DEFINE_string("output", default="", help="How to name converted .h5 weights.")
+flags.DEFINE_bool(
+    "include_top", default=True, help="Whether to include_top in model creation."
+)
 flags.DEFINE_bool(
     "use_ema",
     default=False,
@@ -52,7 +53,9 @@ def main(argv_):
             "Please use either EMA or Momentum or leave both off."
         )
     depth = int(FLAGS.depth)
-    model = DEPTH_TO_MODEL[depth]()  # TODO: weights=None, input_shape.
+    model = DEPTH_TO_MODEL[depth](
+        include_top=FLAGS.include_top
+    )  # TODO: weights=None, input_shape.
     block_args = BLOCK_ARGS[depth]
 
     logging.info("Creating variable mapping...")

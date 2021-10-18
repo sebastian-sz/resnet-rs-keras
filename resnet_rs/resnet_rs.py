@@ -4,6 +4,9 @@ import sys
 
 import tensorflow as tf
 
+# TODO: figure out dropblock - where was it used and how
+# TODO: figure out stochastic depth where used and how
+
 BLOCK_ARGS = {
     50: [
         {"input_filters": 64, "num_repeats": 3},
@@ -389,39 +392,39 @@ def ResNetRS(
     return tf.keras.Model(inputs=[inputs], outputs=[x])
 
 
-def ResNetRS50():
+def ResNetRS50(include_top=True):
     """Build ResNet-RS50 model."""
-    return ResNetRS(depth=50)
+    return ResNetRS(depth=50, include_top=include_top)
 
 
-def ResNetRS101():
+def ResNetRS101(include_top=True):
     """Build ResNet-RS101 model."""
-    return ResNetRS(depth=101)
+    return ResNetRS(depth=101, include_top=include_top)
 
 
-def ResNetRS152():
+def ResNetRS152(include_top=True):
     """Build ResNet-RS152 model."""
-    return ResNetRS(depth=152)
+    return ResNetRS(depth=152, include_top=include_top)
 
 
-def ResNetRS200():
+def ResNetRS200(include_top=True):
     """Build ResNet-RS200 model."""
-    return ResNetRS(depth=200)
+    return ResNetRS(depth=200, include_top=include_top)
 
 
-def ResNetRS270():
+def ResNetRS270(include_top=True):
     """Build ResNet-RS-270 model."""
     _allow_bigger_recursion(1100)
-    return ResNetRS(depth=270)
+    return ResNetRS(depth=270, include_top=include_top)
 
 
-def ResNetRS350():
+def ResNetRS350(include_top=True):
     """Build ResNet-RS350 model."""
     _allow_bigger_recursion(1500)
-    return ResNetRS(depth=350)
+    return ResNetRS(depth=350, include_top=include_top)
 
 
-def ResNetRS420():
+def ResNetRS420(include_top=True):
     """Build ResNet-RS420 model."""
     _allow_bigger_recursion(1700)
-    return ResNetRS(depth=420)
+    return ResNetRS(depth=420, include_top=include_top)
