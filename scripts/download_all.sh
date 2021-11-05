@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#TODO: add fix missing `checkpoint` file
-
 declare -a ModelNamesArray=(
 "resnet-rs-50-i160"
 "resnet-rs-101-i160"

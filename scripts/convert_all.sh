@@ -1,145 +1,37 @@
 #!/bin/bash
 
-python scripts/convert_weights.py \
-  --depth 50 \
-  --ckpt weights/original_weights/resnet-rs-50-i160 \
-  --output weights/resnetrs-50-i160.h5 \
-  --use_ema
+declare -a ModelVariantsArray=(
+"resnet-rs-50-i160"
+"resnet-rs-101-i160"
+"resnet-rs-101-i192"
+"resnet-rs-152-i192"
+"resnet-rs-152-i224"
+"resnet-rs-152-i256"
+"resnet-rs-200-i256"
+"resnet-rs-270-i256"
+"resnet-rs-350-i256"
+"resnet-rs-350-i320"
+"resnet-rs-420-i320"
+)
 
-python scripts/convert_weights.py \
-  --depth 101 \
-  --ckpt weights/original_weights/resnet-rs-101-i160 \
-  --output weights/resnetrs-101-i160.h5 \
-  --use_ema
+for variant in ${ModelVariantsArray[*]}; do
+    echo "${variant}"
+    nameSplit=(${variant//-/ })
+    depth="${nameSplit[2]}"
 
-python scripts/convert_weights.py \
-  --depth 101 \
-  --ckpt weights/original_weights/resnet-rs-101-i192 \
-  --output weights/resnetrs-101-i192.h5 \
-  --use_ema
+    # Export weights
+    python scripts/convert_weights.py \
+        --depth "${depth}" \
+        --ckpt weights/original_weights/"${variant}" \
+        --output weights/"${variant}".h5 \
+        --use_ema
 
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i192 \
-  --output weights/resnetrs-152-i192.h5 \
-  --use_ema
+    # Export no top
+    python scripts/convert_weights.py \
+        --depth "${depth}" \
+        --ckpt weights/original_weights/"${variant}" \
+        --output weights/"${variant}"_notop.h5 \
+        --noinclude_top \
+        --use_ema
 
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i224 \
-  --output weights/resnetrs-152-i224.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i256 \
-  --output weights/resnetrs-152-i256.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 200 \
-  --ckpt weights/original_weights/resnet-rs-200-i256 \
-  --output weights/resnetrs-200-i256.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 270 \
-  --ckpt weights/original_weights/resnet-rs-270-i256 \
-  --output weights/resnetrs-270-i256.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 350 \
-  --ckpt weights/original_weights/resnet-rs-350-i256 \
-  --output weights/resnetrs-350-i256.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 350 \
-  --ckpt weights/original_weights/resnet-rs-350-i320 \
-  --output weights/resnetrs-350-i320.h5 \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 420 \
-  --ckpt weights/original_weights/resnet-rs-420-i320 \
-  --output weights/resnetrs-420-i320.h5 \
-  --use_ema
-
-# Convert notop variants
-python scripts/convert_weights.py \
-  --depth 50 \
-  --ckpt weights/original_weights/resnet-rs-50-i160 \
-  --output weights/resnetrs-50-i160_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 101 \
-  --ckpt weights/original_weights/resnet-rs-101-i160 \
-  --output weights/resnetrs-101-i160_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 101 \
-  --ckpt weights/original_weights/resnet-rs-101-i192 \
-  --output weights/resnetrs-101-i192_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i192 \
-  --output weights/resnetrs-152-i192_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i224 \
-  --output weights/resnetrs-152-i224_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 152 \
-  --ckpt weights/original_weights/resnet-rs-152-i256 \
-  --output weights/resnetrs-152-i256_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 200 \
-  --ckpt weights/original_weights/resnet-rs-200-i256 \
-  --output weights/resnetrs-200-i256_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 270 \
-  --ckpt weights/original_weights/resnet-rs-270-i256 \
-  --output weights/resnetrs-270-i256_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 350 \
-  --ckpt weights/original_weights/resnet-rs-350-i256 \
-  --output weights/resnetrs-350-i256_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 350 \
-  --ckpt weights/original_weights/resnet-rs-350-i320 \
-  --output weights/resnetrs-350-i320_notop.h5 \
-  --noinclude_top \
-  --use_ema
-
-python scripts/convert_weights.py \
-  --depth 420 \
-  --ckpt weights/original_weights/resnet-rs-420-i320 \
-  --output weights/resnetrs-420-i320_notop.h5 \
-  --noinclude_top \
-  --use_ema
+done
