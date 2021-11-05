@@ -25,7 +25,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-50-i160.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs50_i160_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs50_i160_original_logits_ema.npy",
         ),
     },
     {
@@ -34,7 +34,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i160.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs101_i160_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs101_i160_original_logits_ema.npy",
         ),
     },
     {
@@ -43,7 +43,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-101-i192.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs101_i192_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs101_i192_original_logits_ema.npy",
         ),
     },
     {
@@ -52,7 +52,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i192.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i192_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs152_i192_original_logits_ema.npy",
         ),
     },
     {
@@ -61,7 +61,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i224.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i224_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs152_i224_original_logits_ema.npy",
         ),
     },
     {
@@ -70,7 +70,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-152-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i256_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs152_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -79,7 +79,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-200-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs200_i256_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs200_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -88,7 +88,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-270-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs270_i256_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs270_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -97,7 +97,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs350_i256_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs350_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -106,7 +106,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-350-i320.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs350_i320_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs350_i320_original_logits_ema.npy",
         ),
     },
     {
@@ -115,7 +115,7 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnetrs-420-i320.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs420_i320_original_logits.npy",
+            "tests/assets/original_outputs/resnetrs420_i320_original_logits_ema.npy",
         ),
     },
 ]
@@ -187,6 +187,9 @@ class TestLocalOutputConsistency(parameterized.TestCase):
     STDDEV_RGB = [0.229 * 255, 0.224 * 255, 0.225 * 255]
 
     rng = tf.random.Generator.from_seed(1234)
+
+    def setUp(self):
+        tf.keras.backend.clear_session()
 
     @parameterized.named_parameters(OUTPUT_CONSISTENCY_TEST_PARAMS)
     def test_output_consistency(self, model_fn, weights_path, original_outputs):
