@@ -25,7 +25,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-50-i160.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs50_i160_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs50_i160_original_logits_ema.npy",
         ),
     },
     {
@@ -34,7 +35,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-101-i160.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs101_i160_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs101_i160_original_logits_ema.npy",
         ),
     },
     {
@@ -43,7 +45,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-101-i192.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs101_i192_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs101_i192_original_logits_ema.npy",
         ),
     },
     {
@@ -52,7 +55,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-152-i192.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i192_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs152_i192_original_logits_ema.npy",
         ),
     },
     {
@@ -61,7 +65,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-152-i224.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i224_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs152_i224_original_logits_ema.npy",
         ),
     },
     {
@@ -70,7 +75,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-152-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs152_i256_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs152_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -79,7 +85,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-200-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs200_i256_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs200_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -88,7 +95,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-270-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs270_i256_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs270_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -97,7 +105,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-350-i256.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs350_i256_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs350_i256_original_logits_ema.npy",
         ),
     },
     {
@@ -106,7 +115,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-350-i320.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs350_i320_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs350_i320_original_logits_ema.npy",
         ),
     },
     {
@@ -115,7 +125,8 @@ OUTPUT_CONSISTENCY_TEST_PARAMS = [
         "weights_path": os.path.join(ROOT_DIR, "weights/resnet-rs-420-i320.h5"),
         "original_outputs": os.path.join(
             ROOT_DIR,
-            "tests/assets/original_outputs/resnetrs420_i320_original_logits_ema.npy",
+            "test_resnet_rs/assets/original_outputs/"
+            "resnetrs420_i320_original_logits_ema.npy",
         ),
     },
 ]
@@ -180,7 +191,7 @@ FEATURE_EXTRACTION_TEST_PARAMS = [
 
 
 class TestLocalOutputConsistency(parameterized.TestCase):
-    IMAGE_PATH = os.path.join(ROOT_DIR, "tests/assets/panda.jpg")
+    IMAGE_PATH = os.path.join(ROOT_DIR, "test_resnet_rs/assets/panda.jpg")
     INPUT_SHAPE = (224, 224)
     CROP_PADDING = 32
     MEAN_RGB = [0.485 * 255, 0.456 * 255, 0.406 * 255]
