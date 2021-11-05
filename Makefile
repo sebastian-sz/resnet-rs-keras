@@ -1,5 +1,9 @@
 lint:
 	pre-commit run --all-files
 
+
 test:
-	python -m unittest -f tests/test_*.py
+	@for f in $(shell ls test_resnet_rs/test*.py); do \
+  		echo $${f};\
+		python $${f};\
+		done

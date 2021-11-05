@@ -2,7 +2,7 @@ from pkg_resources import DistributionNotFound, get_distribution
 from setuptools import setup
 
 TF_MIN_VERSION = 2.2
-TF_MAX_VERSION = 2.6
+TF_MAX_VERSION = 2.7
 
 with open("README.md", encoding="utf-8") as f:
     long_description = "\n" + f.read()
