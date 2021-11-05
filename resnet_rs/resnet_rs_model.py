@@ -1,93 +1,14 @@
 """Architecture code for Resnet RS models."""
 
-import sys
-
 import tensorflow as tf
 
 # TODO: figure out dropblock - where was it used and how
-# TODO: figure out stochastic depth where used and how
-
-BLOCK_ARGS = {
-    50: [
-        {"input_filters": 64, "num_repeats": 3},
-        {"input_filters": 128, "num_repeats": 4},
-        {"input_filters": 256, "num_repeats": 6},
-        {"input_filters": 512, "num_repeats": 3},
-    ],
-    101: [
-        {"input_filters": 64, "num_repeats": 3},
-        {"input_filters": 128, "num_repeats": 4},
-        {"input_filters": 256, "num_repeats": 23},
-        {"input_filters": 512, "num_repeats": 3},
-    ],
-    152: [
-        {"input_filters": 64, "num_repeats": 3},
-        {"input_filters": 128, "num_repeats": 8},
-        {"input_filters": 256, "num_repeats": 36},
-        {"input_filters": 512, "num_repeats": 3},
-    ],
-    200: [
-        {"input_filters": 64, "num_repeats": 3},
-        {"input_filters": 128, "num_repeats": 24},
-        {"input_filters": 256, "num_repeats": 36},
-        {"input_filters": 512, "num_repeats": 3},
-    ],
-    270: [
-        {"input_filters": 64, "num_repeats": 4},
-        {"input_filters": 128, "num_repeats": 29},
-        {"input_filters": 256, "num_repeats": 53},
-        {"input_filters": 512, "num_repeats": 4},
-    ],
-    350: [
-        {"input_filters": 64, "num_repeats": 4},
-        {"input_filters": 128, "num_repeats": 36},
-        {"input_filters": 256, "num_repeats": 72},
-        {"input_filters": 512, "num_repeats": 4},
-    ],
-    420: [
-        {"input_filters": 64, "num_repeats": 4},
-        {"input_filters": 128, "num_repeats": 44},
-        {"input_filters": 256, "num_repeats": 87},
-        {"input_filters": 512, "num_repeats": 4},
-    ],
-}
-
-
-def _allow_bigger_recursion(target_limit: int):
-    """Increase default recursion limit to create larger models."""
-    current_limit = sys.getrecursionlimit()
-    if current_limit < target_limit:
-        sys.setrecursionlimit(target_limit)
-
-
-def fixed_padding(inputs, kernel_size):
-    """Pad the input along the spatial dimensions independently of input size.
-
-    This function is copied from original repo:
-    https://github.com/tensorflow/tpu/blob/acb331c8878ce5a4124d4d7687df5fe0fadcd43b/models/official/resnet/resnet_model.py#L357
-
-    Args:
-        inputs: `Tensor` of size `[batch, channels, height, width]` or
-            `[batch, height, width, channels]` depending on `data_format`.
-        kernel_size: `int` kernel size to be used for `conv2d` or max_pool2d`
-            operations. Should be a positive integer.
-    Returns:
-        A padded `Tensor` of the same `data_format` with size either intact
-        (if `kernel_size == 1`) or padded (if `kernel_size > 1`).
-    """
-    pad_total = kernel_size - 1
-    pad_beg = pad_total // 2
-    pad_end = pad_total - pad_beg
-    if tf.keras.backend.image_data_format() == "channels_first":
-        padded_inputs = tf.pad(
-            inputs, [[0, 0], [0, 0], [pad_beg, pad_end], [pad_beg, pad_end]]
-        )
-    else:
-        padded_inputs = tf.pad(
-            inputs, [[0, 0], [pad_beg, pad_end], [pad_beg, pad_end], [0, 0]]
-        )
-
-    return padded_inputs
+from resnet_rs.block_args import BLOCK_ARGS
+from resnet_rs.model_utils import (
+    allow_bigger_recursion,
+    fixed_padding,
+    get_survival_probability,
+)
 
 
 def Conv2DFixedPadding(filters, kernel_size, strides, name):
@@ -179,6 +100,7 @@ def BottleneckBlock(
     bn_epsilon: float,
     activation: str,
     se_ratio: float,
+    survival_probability: float,
     name: str = "",
 ):
     """Bottleneck block variant for residual networks with BN after convolutions."""
@@ -302,6 +224,12 @@ def BottleneckBlock(
                 [inputs, se_tensor], name=name + "se_excite"
             )
 
+        # Drop connect
+        if survival_probability:
+            inputs = tf.keras.layers.Dropout(
+                survival_probability, noise_shape=(None, 1, 1, 1), name=name + "drop"
+            )(inputs)
+
         inputs = tf.keras.layers.Add()([inputs, shortcut])
 
         return tf.keras.layers.Activation(activation, name=name + "output_act")(inputs)
@@ -317,6 +245,7 @@ def BlockGroup(
     bn_momentum,
     num_repeats,
     activation,
+    survival_probability: float,
     name: str,
 ):
     """Create one group of blocks for the ResNet model."""
@@ -331,6 +260,7 @@ def BlockGroup(
             bn_epsilon=bn_epsilon,
             bn_momentum=bn_momentum,
             activation=activation,
+            survival_probability=survival_probability,
             name=name + "block_0_",
         )(inputs)
 
@@ -343,6 +273,7 @@ def BlockGroup(
                 activation=activation,
                 bn_epsilon=bn_epsilon,
                 bn_momentum=bn_momentum,
+                survival_probability=survival_probability,
                 name=name + f"block_{i}_",
             )(x)
         return x
@@ -353,18 +284,21 @@ def BlockGroup(
 def ResNetRS(
     depth: int,
     input_shape=(None, None, 3),  # TODO: make this more, keras like.
-    bn_momentum=0,  # Todo not 0.9?
-    bn_epsilon=1e-5,
+    bn_momentum=0,  # TODO; get from configs
+    bn_epsilon=1e-5,  # TODO; get from configs
     activation: str = "relu",
-    se_ratio=0.25,
-    dropout_rate=0.25,  # TODO: check dropblock and stochastic depth
+    se_ratio=0.25,  # TODO; get from configs
+    dropout_rate=0.25,  # TODO; get from configs
+    drop_connect_rate=0.2,
     include_top=True,
 ):
     """Build Resnet-RS model.
 
     TODO: double transpose trick?
     TODO: extend this docstring.
-    TODO: consider (optional) preprocessing layer.
+    TODO: Dropblock layer
+
+
     """
     inputs = tf.keras.Input(input_shape)
 
@@ -372,7 +306,15 @@ def ResNetRS(
         inputs
     )
 
-    for i, args in enumerate(BLOCK_ARGS[depth]):
+    block_args = BLOCK_ARGS[depth]
+
+    for i, args in enumerate(block_args):
+        survival_probability = get_survival_probability(
+            init_rate=drop_connect_rate,
+            block_num=i + 2,
+            total_blocks=len(block_args) + 1,
+        )
+
         x = BlockGroup(
             filters=args["input_filters"],
             activation=activation,
@@ -381,6 +323,7 @@ def ResNetRS(
             se_ratio=se_ratio,
             bn_momentum=bn_momentum,
             bn_epsilon=bn_epsilon,
+            survival_probability=survival_probability,
             name=f"c{i + 2}_",
         )(x)
 
@@ -394,37 +337,48 @@ def ResNetRS(
 
 def ResNetRS50(include_top=True):
     """Build ResNet-RS50 model."""
-    return ResNetRS(depth=50, include_top=include_top)
+    return ResNetRS(depth=50, include_top=include_top, drop_connect_rate=0.0)
 
 
 def ResNetRS101(include_top=True):
     """Build ResNet-RS101 model."""
-    return ResNetRS(depth=101, include_top=include_top)
+    return ResNetRS(depth=101, include_top=include_top, drop_connect_rate=0.0)
 
 
 def ResNetRS152(include_top=True):
     """Build ResNet-RS152 model."""
-    return ResNetRS(depth=152, include_top=include_top)
+    return ResNetRS(depth=152, include_top=include_top, drop_connect_rate=0.0)
 
 
 def ResNetRS200(include_top=True):
     """Build ResNet-RS200 model."""
-    return ResNetRS(depth=200, include_top=include_top)
+    return ResNetRS(depth=200, include_top=include_top, drop_connect_rate=0.1)
 
 
 def ResNetRS270(include_top=True):
     """Build ResNet-RS-270 model."""
-    _allow_bigger_recursion(1100)
-    return ResNetRS(depth=270, include_top=include_top)
+    allow_bigger_recursion(1300)
+    return ResNetRS(depth=270, include_top=include_top, drop_connect_rate=0.1)
 
 
 def ResNetRS350(include_top=True):
     """Build ResNet-RS350 model."""
-    _allow_bigger_recursion(1500)
-    return ResNetRS(depth=350, include_top=include_top)
+    allow_bigger_recursion(1500)
+    return ResNetRS(
+        depth=350,
+        include_top=include_top,
+        dropout_rate=0.25,  # or 0.4
+        drop_connect_rate=0.1,
+    )
 
 
 def ResNetRS420(include_top=True):
     """Build ResNet-RS420 model."""
-    _allow_bigger_recursion(1700)
-    return ResNetRS(depth=420, include_top=include_top)
+    allow_bigger_recursion(1800)
+    return ResNetRS(
+        depth=420, include_top=include_top, dropout_rate=0.4, drop_connect_rate=0.1
+    )
+
+
+if __name__ == "__main__":
+    model = ResNetRS200()

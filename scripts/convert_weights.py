@@ -1,7 +1,7 @@
 import tensorflow as tf
 from absl import app, flags, logging
 
-from resnet_rs.resnet_rs import (
+from resnet_rs.resnet_rs_model import (
     BLOCK_ARGS,
     ResNetRS50,
     ResNetRS101,

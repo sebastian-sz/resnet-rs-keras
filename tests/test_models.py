@@ -6,7 +6,7 @@ from typing import Callable
 import tensorflow as tf
 from absl.testing import absltest, parameterized
 
-from resnet_rs.resnet_rs import (
+from resnet_rs.resnet_rs_model import (
     ResNetRS50,
     ResNetRS101,
     ResNetRS152,
