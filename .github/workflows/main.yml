@@ -4,7 +4,7 @@ on:
     branches: [main]
 
 jobs:
-  # Run Lint Job
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +18,15 @@ jobs:
           pip install -r requirements.txt
           make lint
 
-  # Run all tests:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: docker build -t keras_resnet_rs . --build-arg IMAGE_TAG=latest
+      - name: Run
+        run: docker run --rm keras_resnet_rs python -c "from resnet_rs import ResNetRS50"
+
   test:
     runs-on: ubuntu-latest
     strategy:
