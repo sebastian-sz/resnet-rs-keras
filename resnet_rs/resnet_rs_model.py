@@ -113,6 +113,45 @@ def STEM(bn_momentum: float, bn_epsilon: float, activation: str):
     return apply
 
 
+def SE(in_filters: int, se_ratio: float, name: str, expand_ratio: int = 1):
+    """Squeeze and Excitation block."""
+
+    def apply(inputs):
+        if tf.keras.backend.image_data_format() == "channels_first":
+            spatial_dims = [2, 3]
+        else:
+            spatial_dims = [1, 2]
+        se_tensor = tf.reduce_mean(inputs, spatial_dims, keepdims=True)
+
+        num_reduced_filters = max(1, int(in_filters * 4 * se_ratio))
+
+        se_tensor = tf.keras.layers.Conv2D(
+            filters=num_reduced_filters,
+            kernel_size=[1, 1],
+            strides=[1, 1],
+            kernel_initializer=tf.keras.initializers.VarianceScaling(),
+            padding="same",
+            use_bias=True,
+            activation="relu",
+            name=name + "se_reduce",
+        )(se_tensor)
+
+        se_tensor = tf.keras.layers.Conv2D(
+            filters=4 * in_filters * expand_ratio,  # Expand ratio is 1 by default
+            kernel_size=[1, 1],
+            strides=[1, 1],
+            kernel_initializer=tf.keras.initializers.VarianceScaling(),
+            padding="same",
+            use_bias=True,
+            activation="sigmoid",
+            name=name + "se_expand",
+        )(se_tensor)
+
+        return tf.keras.layers.multiply([inputs, se_tensor], name=name + "se_excite")
+
+    return apply
+
+
 def BottleneckBlock(
     filters: int,
     strides: int,
@@ -162,95 +201,52 @@ def BottleneckBlock(
             )(shortcut)
 
         # First conv layer:
-        inputs = Conv2DFixedPadding(
+        x = Conv2DFixedPadding(
             filters=filters, kernel_size=1, strides=1, name=name + "conv_1"
         )(inputs)
-        inputs = tf.keras.layers.BatchNormalization(
+        x = tf.keras.layers.BatchNormalization(
             axis=bn_axis,
             momentum=bn_momentum,
             epsilon=bn_epsilon,
             name=name + "batch_norm_1",
-        )(inputs)
-        inputs = tf.keras.layers.Activation(activation, name=name + "act_1")(inputs)
+        )(x)
+        x = tf.keras.layers.Activation(activation, name=name + "act_1")(x)
 
         # Second conv layer:
-        inputs = Conv2DFixedPadding(
+        x = Conv2DFixedPadding(
             filters=filters, kernel_size=3, strides=strides, name=name + "conv_2"
-        )(inputs)
-        inputs = tf.keras.layers.BatchNormalization(
+        )(x)
+        x = tf.keras.layers.BatchNormalization(
             axis=bn_axis,
             momentum=bn_momentum,
             epsilon=bn_epsilon,
             name=name + "batch_norm_2",
-        )(inputs)
-        inputs = tf.keras.layers.Activation(activation, name=name + "act_2")(inputs)
+        )(x)
+        x = tf.keras.layers.Activation(activation, name=name + "act_2")(x)
 
         # Third conv layer:
-        inputs = Conv2DFixedPadding(
+        x = Conv2DFixedPadding(
             filters=filters * 4, kernel_size=1, strides=1, name=name + "conv_3"
-        )(inputs)
-        inputs = tf.keras.layers.BatchNormalization(
+        )(x)
+        x = tf.keras.layers.BatchNormalization(
             axis=bn_axis,
             momentum=bn_momentum,
             epsilon=bn_epsilon,
             name=name + "batch_norm_3",
-        )(inputs)
+        )(x)
 
-        # TODO: SE block as a separate layer.
         if 0 < se_ratio < 1:
-            num_reduced_filters = max(1, int(filters * 4 * se_ratio))
-
-            if tf.keras.backend.image_data_format() == "channels_first":
-                spatial_dims = [2, 3]
-            else:
-                spatial_dims = [1, 2]
-            se_tensor = tf.reduce_mean(inputs, spatial_dims, keepdims=True)
-
-            # TODO: Global average Pooling instead?
-            # se_tensor = tf.keras.layers.GlobalAveragePooling2D(
-            # name=name + "se_squeeze")(inputs)
-            # if bn_axis == 1:
-            #     se_shape = (filters, 1, 1)
-            # else:
-            #     se_shape = (1, 1, filters)
-            # se_tensor = tf.keras.layers.Reshape(
-            # (1, 1, -1), name=name + "se_reshape")(se_tensor)
-
-            se_tensor = tf.keras.layers.Conv2D(
-                filters=num_reduced_filters,
-                kernel_size=[1, 1],
-                strides=[1, 1],
-                kernel_initializer=tf.keras.initializers.VarianceScaling(),
-                padding="same",
-                use_bias=True,
-                activation="relu",
-                name=name + "se_reduce",
-            )(se_tensor)
-
-            se_tensor = tf.keras.layers.Conv2D(
-                filters=4 * filters,  # Expand ratio is 1 by default
-                kernel_size=[1, 1],
-                strides=[1, 1],
-                kernel_initializer=tf.keras.initializers.VarianceScaling(),
-                padding="same",
-                use_bias=True,
-                activation="sigmoid",
-                name=name + "se_expand",
-            )(se_tensor)
-
-            inputs = tf.keras.layers.multiply(
-                [inputs, se_tensor], name=name + "se_excite"
-            )
+            x = SE(filters, se_ratio=se_ratio, name=name)(x)
 
         # Drop connect
         if survival_probability:
-            inputs = tf.keras.layers.Dropout(
+            x = tf.keras.layers.Dropout(
                 survival_probability, noise_shape=(None, 1, 1, 1), name=name + "drop"
-            )(inputs)
+            )(x)
 
-        inputs = tf.keras.layers.Add()([inputs, shortcut])
+        x = tf.keras.layers.Add()([x, shortcut])
 
-        return tf.keras.layers.Activation(activation, name=name + "output_act")(inputs)
+        return tf.keras.layers.Activation(activation, name=name + "output_act")(x)
 
     return apply
 
