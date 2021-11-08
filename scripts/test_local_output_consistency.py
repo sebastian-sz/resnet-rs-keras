@@ -204,8 +204,7 @@ class TestLocalOutputConsistency(parameterized.TestCase):
 
     @parameterized.named_parameters(OUTPUT_CONSISTENCY_TEST_PARAMS)
     def test_output_consistency(self, model_fn, weights_path, original_outputs):
-        model = model_fn()
-        model.load_weights(weights_path)
+        model = model_fn(weights=weights_path, classifier_activation=None)
 
         input_tensor = self._load_and_preprocess_array(self.INPUT_SHAPE[0])
         output = model(input_tensor, training=False)

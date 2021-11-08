@@ -54,8 +54,8 @@ def main(argv_):
         )
     depth = int(FLAGS.depth)
     model = DEPTH_TO_MODEL[depth](
-        include_top=FLAGS.include_top
-    )  # TODO: weights=None, input_shape.
+        include_top=FLAGS.include_top, weights=None, input_shape=(None, None, 3)
+    )
     block_args = BLOCK_ARGS[depth]
 
     logging.info("Creating variable mapping...")
