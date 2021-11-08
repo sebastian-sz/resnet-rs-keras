@@ -27,11 +27,37 @@ jobs:
       - name: Run
         run: docker run --rm keras_resnet_rs python -c "from resnet_rs import ResNetRS50"
 
+  pip-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: Install
+        run: |
+          pip install git+https://github.com/sebastian-sz/resnet-rs-keras@$GITHUB_HEAD_REF
+      - name: Import
+        run: python -c "from resnet_rs import ResNetRS50"
+
+  generate_tests_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        run: |
+          VERSIONS=$(python .github/scripts/generate_tf_dependency_matrix.py)
+          echo "::set-output name=matrix::${VERSIONS//'%'/'%25'}"
+
   test:
+    needs: generate_tests_matrix
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tensorflow-version: [ 2.4, 2.5, 2.6, 2.7 ]
+        tensorflow-version: ${{fromJson(needs.generate_tests_matrix.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
