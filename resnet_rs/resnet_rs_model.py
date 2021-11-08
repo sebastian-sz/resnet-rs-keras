@@ -1,14 +1,35 @@
 """Architecture code for Resnet RS models."""
+from typing import Callable, Dict, List, Union
 
 import tensorflow as tf
+from absl import logging
+from keras.applications import imagenet_utils
+from keras.utils import layer_utils
+from tensorflow.python.lib.io import file_io
 
-# TODO: figure out dropblock - where was it used and how
 from resnet_rs.block_args import BLOCK_ARGS
 from resnet_rs.model_utils import (
     allow_bigger_recursion,
     fixed_padding,
     get_survival_probability,
 )
+
+BASE_WEIGHTS_URL = (
+    "https://github.com/sebastian-sz/resnet-rs-keras/releases/download/v1.0/"
+)
+
+# TODO: weights hashes + upload
+WEIGHT_HASHES = {"resnet-rs-50-i160.h5": ""}
+
+DEPTH_TO_WEIGHT_VARIANTS = {
+    50: [160],
+    101: [160, 192],
+    152: [192, 224, 256],
+    200: [256],
+    270: [256],
+    350: [256, 320],
+    420: [320],
+}
 
 
 def Conv2DFixedPadding(filters, kernel_size, strides, name):
@@ -139,9 +160,6 @@ def BottleneckBlock(
                 epsilon=bn_epsilon,
                 name=name + "projection_batch_norm",
             )(shortcut)
-
-        # TODO: DROPBLOCK IS USED HERE
-        # https://github.com/tensorflow/tpu/blob/298d1fa98638f302ab9df34d9d26bbded7220e8b/models/official/resnet/resnet_model.py#L549
 
         # First conv layer:
         inputs = Conv2DFixedPadding(
@@ -283,30 +301,121 @@ def BlockGroup(
 
 def ResNetRS(
     depth: int,
-    input_shape=(None, None, 3),  # TODO: make this more, keras like.
-    bn_momentum=0,  # TODO; get from configs
-    bn_epsilon=1e-5,  # TODO; get from configs
+    input_shape=(None, None, 3),
+    bn_momentum=0,
+    bn_epsilon=1e-5,
     activation: str = "relu",
-    se_ratio=0.25,  # TODO; get from configs
-    dropout_rate=0.25,  # TODO; get from configs
+    se_ratio=0.25,
+    dropout_rate=0.25,
     drop_connect_rate=0.2,
     include_top=True,
+    block_args: List[Dict[str, int]] = None,
+    model_name="ResNetRS",
+    pooling=None,
+    weights="imagenet",
+    input_tensor=None,
+    classes=1000,
+    classifier_activation: Union[str, Callable] = "softmax",
 ):
-    """Build Resnet-RS model.
+    """Build Resnet-RS model, given provided parameters.
 
-    TODO: double transpose trick?
-    TODO: extend this docstring.
-    TODO: Dropblock layer
+    Parameters:
+        :param depth: Depth of ResNet network.
+        :param dropout_rate: dropout rate before final classifier layer.
+        :param bn_momentum: Momentum parameter for Batch Normalization layers.
+        :param bn_epsilon: Epsilon parameter for Batch Normalization layers.
+        :param activation: activation function.
+        :param block_args: list of dicts, parameters to construct block modules.
+        :param se_ratio: Squeeze and Excitation layer ratio.
+        :param model_name: name of the model.
+        :param drop_connect_rate: dropout rate at skip connections.
+        :param include_top: whether to include the fully-connected layer at the top of
+        the network.
+        :param weights: one of `None` (random initialization), `'imagenet'`
+            (pre-training on ImageNet), or the path to the weights file to be loaded.
+            Note: one model can have multiple imagenet variants depending on
+            input shape it was trained with. For input_shape 224x224 pass
+            `imagenet-i224` as argument. By default, highest input shape weights are
+            downloaded.
+        :param input_tensor: optional Keras tensor (i.e. output of `layers.Input()`) to
+            use as image input for the model.
+        :param input_shape: optional shape tuple. It should have exactly 3 inputs
+            channels, and width and height should be no smaller than 32.
+            E.g. (200, 200, 3) would be one valid value.
+        :param  pooling: optional pooling mode for feature extraction when `include_top`
+            is `False`.
+            - `None` means that the output of the model will be
+                the 4D tensor output of the
+                last convolutional layer.
+            - `avg` means that global average pooling
+                will be applied to the output of the
+                last convolutional layer, and thus
+                the output of the model will be a 2D tensor.
+            - `max` means that global max pooling will
+                be applied.
+        :param classes: optional number of classes to classify images into, only to be
+            specified if `include_top` is True, and if no `weights` argument is
+            specified.
+        :param classifier_activation: A `str` or callable. The activation function to
+            use on the "top" layer. Ignored unless `include_top=True`. Set
+            `classifier_activation=None` to return the logits of the "top" layer.
 
+    Returns:
+        A `tf.keras.Model` instance.
 
+    Raises:
+        ValueError: in case of invalid argument for `weights`, or invalid input
+            shape.
+        ValueError: if `classifier_activation` is not `softmax` or `None` when
+            using a pretrained top layer.
     """
-    inputs = tf.keras.Input(input_shape)
+    # Validate parameters
+    available_weight_variants = DEPTH_TO_WEIGHT_VARIANTS[depth]
+    if weights == "imagenet":
+        max_input_shape = max(available_weight_variants)
+        logging.warning(
+            f"Received `imagenet` argument without "
+            f"explicit weights input size. Picking weights trained with "
+            f"biggest available shape: imagenet-i{max_input_shape}"
+        )
+        weights = f"{weights}-i{max_input_shape}"
 
+    weights_allow_list = [f"imagenet-i{x}" for x in available_weight_variants]
+    if not (weights in {*weights_allow_list, None} or file_io.file_exists_v2(weights)):
+        raise ValueError(
+            "The `weights` argument should be either "
+            "`None` (random initialization), `'imagenet'` "
+            "(pre-training on ImageNet, with highest available input shape),"
+            " or the path to the weights file to be loaded. "
+            f"For ResNetRS{depth} the following weight variants are "
+            f"available {weights_allow_list} (default=highest)."
+            f" Received weights={weights}"
+        )
+
+    if weights in weights_allow_list and include_top and classes != 1000:
+        raise ValueError(
+            f"If using `weights` as `'imagenet'` or any of {weights_allow_list} with "
+            f"`include_top` as true, `classes` should be 1000. "
+            f"Received classes={classes}"
+        )
+
+    # Define input tensor
+    if input_tensor is None:
+        img_input = tf.keras.layers.Input(shape=input_shape)
+    else:
+        if not tf.keras.backend.is_keras_tensor(input_tensor):
+            img_input = tf.keras.layers.Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
+    # Build stem
     x = STEM(bn_momentum=bn_momentum, bn_epsilon=bn_epsilon, activation=activation)(
-        inputs
+        img_input
     )
 
-    block_args = BLOCK_ARGS[depth]
+    # Build blocks
+    if block_args is None:
+        block_args = BLOCK_ARGS[depth]
 
     for i, args in enumerate(block_args):
         survival_probability = get_survival_probability(
@@ -327,58 +436,222 @@ def ResNetRS(
             name=f"c{i + 2}_",
         )(x)
 
-    # Build HEAD:
+    # Build head:
     if include_top:
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(1000, name="predictions")(x)
+        x = tf.keras.layers.GlobalAveragePooling2D(name="avg_pool")(x)
+        if dropout_rate > 0:
+            x = tf.keras.layers.Dropout(dropout_rate, name="top_dropout")(x)
 
-    return tf.keras.Model(inputs=[inputs], outputs=[x])
+        imagenet_utils.validate_activation(classifier_activation, weights)
+        x = tf.keras.layers.Dense(
+            classes, activation=classifier_activation, name="predictions"
+        )(x)
+    else:
+        if pooling == "avg":
+            x = tf.keras.layers.GlobalAveragePooling2D(name="avg_pool")(x)
+        elif pooling == "max":
+            x = tf.keras.layers.GlobalMaxPooling2D(name="max_pool")(x)
+
+    # Ensure that the model takes into account
+    # any potential predecessors of `input_tensor`.
+    if input_tensor is not None:
+        inputs = layer_utils.get_source_inputs(input_tensor)
+    else:
+        inputs = img_input
+
+    # Create model.
+    model = tf.keras.Model(inputs, x, name=model_name)
+
+    # Download weights
+    if weights in weights_allow_list:
+        weights_input_shape = weights.split("-")[-1]  # e. g. "i160"
+        weights_name = f"{model_name}-{weights_input_shape}"
+        if not include_top:
+            weights_name += "_notop"
+
+        # TODO: upload weights
+        # filename = f"{weights_name}.h5"
+        # download_url = BASE_WEIGHTS_URL + filename
+        # weights_path = tf.keras.utils.get_file(
+        #     fname=filename,
+        #     origin=download_url,
+        #     cache_subdir="models",
+        #     file_hash=WEIGHT_HASHES[filename],
+        # )
+        # model.load_weights(weights_path)
+
+    elif weights is not None:
+        model.load_weights(weights)
+
+    return model
 
 
-def ResNetRS50(include_top=True):
+def ResNetRS50(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS50 model."""
-    return ResNetRS(depth=50, include_top=include_top, drop_connect_rate=0.0)
+    return ResNetRS(
+        depth=50,
+        include_top=include_top,
+        drop_connect_rate=0.0,
+        dropout_rate=0.25,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
+    )
 
 
-def ResNetRS101(include_top=True):
+def ResNetRS101(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS101 model."""
-    return ResNetRS(depth=101, include_top=include_top, drop_connect_rate=0.0)
+    return ResNetRS(
+        depth=101,
+        include_top=include_top,
+        drop_connect_rate=0.0,
+        dropout_rate=0.25,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
+    )
 
 
-def ResNetRS152(include_top=True):
+def ResNetRS152(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS152 model."""
-    return ResNetRS(depth=152, include_top=include_top, drop_connect_rate=0.0)
+    return ResNetRS(
+        depth=152,
+        include_top=include_top,
+        drop_connect_rate=0.0,
+        dropout_rate=0.25,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
+    )
 
 
-def ResNetRS200(include_top=True):
+def ResNetRS200(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS200 model."""
-    return ResNetRS(depth=200, include_top=include_top, drop_connect_rate=0.1)
+    return ResNetRS(
+        depth=200,
+        include_top=include_top,
+        drop_connect_rate=0.1,
+        dropout_rate=0.25,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
+    )
 
 
-def ResNetRS270(include_top=True):
+def ResNetRS270(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS-270 model."""
     allow_bigger_recursion(1300)
-    return ResNetRS(depth=270, include_top=include_top, drop_connect_rate=0.1)
+    return ResNetRS(
+        depth=270,
+        include_top=include_top,
+        drop_connect_rate=0.1,
+        dropout_rate=0.25,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
+    )
 
 
-def ResNetRS350(include_top=True):
+def ResNetRS350(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS350 model."""
     allow_bigger_recursion(1500)
     return ResNetRS(
         depth=350,
         include_top=include_top,
-        dropout_rate=0.25,  # or 0.4
         drop_connect_rate=0.1,
+        dropout_rate=0.4,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
     )
 
 
-def ResNetRS420(include_top=True):
+def ResNetRS420(
+    include_top=True,
+    weights="imagenet",
+    classes=1000,
+    input_shape=(None, None, 3),
+    input_tensor=None,
+    pooling=None,
+    classifier_activation="softmax",
+):
     """Build ResNet-RS420 model."""
     allow_bigger_recursion(1800)
     return ResNetRS(
-        depth=420, include_top=include_top, dropout_rate=0.4, drop_connect_rate=0.1
+        depth=420,
+        include_top=include_top,
+        dropout_rate=0.4,
+        drop_connect_rate=0.1,
+        weights=weights,
+        classes=classes,
+        input_shape=input_shape,
+        input_tensor=input_tensor,
+        pooling=pooling,
+        classifier_activation=classifier_activation,
     )
-
-
-if __name__ == "__main__":
-    model = ResNetRS200()
