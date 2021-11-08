@@ -18,8 +18,30 @@ BASE_WEIGHTS_URL = (
     "https://github.com/sebastian-sz/resnet-rs-keras/releases/download/v1.0/"
 )
 
-# TODO: weights hashes + upload
-WEIGHT_HASHES = {"resnet-rs-50-i160.h5": ""}
+WEIGHT_HASHES = {
+    "resnet-rs-101-i160.h5": "544b3434d00efc199d66e9058c7f3379",
+    "resnet-rs-101-i160_notop.h5": "82d5b90c5ce9d710da639d6216d0f979",
+    "resnet-rs-101-i192.h5": "eb285be29ab42cf4835ff20a5e3b5d23",
+    "resnet-rs-101-i192_notop.h5": "f9a0f6b85faa9c3db2b6e233c4eebb5b",
+    "resnet-rs-152-i192.h5": "8d72a301ed8a6f11a47c4ced4396e338",
+    "resnet-rs-152-i192_notop.h5": "5fbf7ac2155cb4d5a6180ee9e3aa8704",
+    "resnet-rs-152-i224.h5": "31a46a92ab21b84193d0d71dd8c3d03b",
+    "resnet-rs-152-i224_notop.h5": "dc8b2cba2005552eafa3167f00dc2133",
+    "resnet-rs-152-i256.h5": "ba6271b99bdeb4e7a9b15c05964ef4ad",
+    "resnet-rs-152-i256_notop.h5": "fa79794252dbe47c89130f65349d654a",
+    "resnet-rs-200-i256.h5": "a76930b741884e09ce90fa7450747d5f",
+    "resnet-rs-200-i256_notop.h5": "bbdb3994718dfc0d1cd45d7eff3f3d9c",
+    "resnet-rs-270-i256.h5": "20d575825ba26176b03cb51012a367a8",
+    "resnet-rs-270-i256_notop.h5": "2c42ecb22e35f3e23d2f70babce0a2aa",
+    "resnet-rs-350-i256.h5": "f4a039dc3c421321b7fc240494574a68",
+    "resnet-rs-350-i256_notop.h5": "6e44b55025bbdff8f51692a023143d66",
+    "resnet-rs-350-i320.h5": "7ccb858cc738305e8ceb3c0140bee393",
+    "resnet-rs-350-i320_notop.h5": "ab0c1f9079d2f85a9facbd2c88aa6079",
+    "resnet-rs-420-i320.h5": "ae0eb9bed39e64fc8d7e0db4018dc7e8",
+    "resnet-rs-420-i320_notop.h5": "fe6217c32be8305b1889657172b98884",
+    "resnet-rs-50-i160.h5": "69d9d925319f00a8bdd4af23c04e4102",
+    "resnet-rs-50-i160_notop.h5": "90daa68cd26c95aa6c5d25451e095529",
+}
 
 DEPTH_TO_WEIGHT_VARIANTS = {
     50: [160],
@@ -306,7 +328,7 @@ def ResNetRS(
     drop_connect_rate=0.2,
     include_top=True,
     block_args: List[Dict[str, int]] = None,
-    model_name="ResNetRS",
+    model_name="resnet-rs",
     pooling=None,
     weights="imagenet",
     input_tensor=None,
@@ -465,16 +487,15 @@ def ResNetRS(
         if not include_top:
             weights_name += "_notop"
 
-        # TODO: upload weights
-        # filename = f"{weights_name}.h5"
-        # download_url = BASE_WEIGHTS_URL + filename
-        # weights_path = tf.keras.utils.get_file(
-        #     fname=filename,
-        #     origin=download_url,
-        #     cache_subdir="models",
-        #     file_hash=WEIGHT_HASHES[filename],
-        # )
-        # model.load_weights(weights_path)
+        filename = f"{weights_name}.h5"
+        download_url = BASE_WEIGHTS_URL + filename
+        weights_path = tf.keras.utils.get_file(
+            fname=filename,
+            origin=download_url,
+            cache_subdir="models",
+            file_hash=WEIGHT_HASHES[filename],
+        )
+        model.load_weights(weights_path)
 
     elif weights is not None:
         model.load_weights(weights)
@@ -503,6 +524,7 @@ def ResNetRS50(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-50",
     )
 
 
@@ -527,6 +549,7 @@ def ResNetRS101(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-101",
     )
 
 
@@ -551,6 +574,7 @@ def ResNetRS152(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-152",
     )
 
 
@@ -575,6 +599,7 @@ def ResNetRS200(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-200",
     )
 
 
@@ -600,6 +625,7 @@ def ResNetRS270(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-270",
     )
 
 
@@ -625,6 +651,7 @@ def ResNetRS350(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-350",
     )
 
 
@@ -650,4 +677,5 @@ def ResNetRS420(
         input_tensor=input_tensor,
         pooling=pooling,
         classifier_activation=classifier_activation,
+        model_name="resnet-rs-420",
     )
