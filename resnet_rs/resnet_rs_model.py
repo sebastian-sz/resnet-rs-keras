@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Union
 
 import tensorflow as tf
 from absl import logging
-from tensorflow.keras.applications import imagenet_utils
+from tensorflow.python.keras.applications import imagenet_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.lib.io import file_io
 
