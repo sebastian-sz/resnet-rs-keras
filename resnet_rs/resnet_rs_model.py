@@ -137,17 +137,19 @@ def STEM(bn_momentum: float, bn_epsilon: float, activation: str):
 
 def SE(in_filters: int, se_ratio: float, name: str, expand_ratio: int = 1):
     """Squeeze and Excitation block."""
+    bn_axis = 3 if tf.keras.backend.image_data_format() == "channels_last" else 1
 
     def apply(inputs):
-        if tf.keras.backend.image_data_format() == "channels_first":
-            spatial_dims = [2, 3]
+        x = tf.keras.layers.GlobalAveragePooling2D(name=name + "se_squeeze")(inputs)
+        if bn_axis == 1:
+            se_shape = (x.shape[-1], 1, 1)
         else:
-            spatial_dims = [1, 2]
-        se_tensor = tf.reduce_mean(inputs, spatial_dims, keepdims=True)
+            se_shape = (1, 1, x.shape[-1])
+        x = tf.keras.layers.Reshape(se_shape, name=name + "se_reshape")(x)
 
         num_reduced_filters = max(1, int(in_filters * 4 * se_ratio))
 
-        se_tensor = tf.keras.layers.Conv2D(
+        x = tf.keras.layers.Conv2D(
             filters=num_reduced_filters,
             kernel_size=[1, 1],
             strides=[1, 1],
@@ -156,9 +158,9 @@ def SE(in_filters: int, se_ratio: float, name: str, expand_ratio: int = 1):
             use_bias=True,
             activation="relu",
             name=name + "se_reduce",
-        )(se_tensor)
+        )(x)
 
-        se_tensor = tf.keras.layers.Conv2D(
+        x = tf.keras.layers.Conv2D(
             filters=4 * in_filters * expand_ratio,  # Expand ratio is 1 by default
             kernel_size=[1, 1],
             strides=[1, 1],
@@ -167,9 +169,9 @@ def SE(in_filters: int, se_ratio: float, name: str, expand_ratio: int = 1):
             use_bias=True,
             activation="sigmoid",
             name=name + "se_expand",
-        )(se_tensor)
+        )(x)
 
-        return tf.keras.layers.multiply([inputs, se_tensor], name=name + "se_excite")
+        return tf.keras.layers.multiply([inputs, x], name=name + "se_excite")
 
     return apply
 

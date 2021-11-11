@@ -22,7 +22,7 @@ def allow_bigger_recursion(target_limit: int):
 def fixed_padding(inputs, kernel_size):
     """Pad the input along the spatial dimensions independently of input size.
 
-    This function is copied from original repo:
+    This function is copied/modified from original repo:
     https://github.com/tensorflow/tpu/blob/acb331c8878ce5a4124d4d7687df5fe0fadcd43b/models/official/resnet/resnet_model.py#L357
 
     Args:
@@ -37,13 +37,10 @@ def fixed_padding(inputs, kernel_size):
     pad_total = kernel_size - 1
     pad_beg = pad_total // 2
     pad_end = pad_total - pad_beg
-    if tf.keras.backend.image_data_format() == "channels_first":
-        padded_inputs = tf.pad(
-            inputs, [[0, 0], [0, 0], [pad_beg, pad_end], [pad_beg, pad_end]]
-        )
-    else:
-        padded_inputs = tf.pad(
-            inputs, [[0, 0], [pad_beg, pad_end], [pad_beg, pad_end], [0, 0]]
-        )
+
+    # Use ZeroPadding as to avoid TFOpLambda layer
+    padded_inputs = tf.keras.layers.ZeroPadding2D(
+        padding=((pad_beg, pad_end), (pad_beg, pad_end))
+    )(inputs)
 
     return padded_inputs

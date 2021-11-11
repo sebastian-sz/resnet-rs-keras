@@ -51,7 +51,7 @@ SURVIVAL_PROBABILITY_PARAMS = [
 ]
 
 
-class ModelArgsTest(parameterized.TestCase):
+class TestModelArgs(parameterized.TestCase):
     @parameterized.named_parameters(SURVIVAL_PROBABILITY_PARAMS)
     def test_correct_survival_probability_for_each_block_group(
         self, depth: int, init_rate: float, expected_survival_probabilities: List[int]
