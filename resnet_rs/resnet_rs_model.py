@@ -322,7 +322,7 @@ def BlockGroup(
 def ResNetRS(
     depth: int,
     input_shape=(None, None, 3),
-    bn_momentum=0,
+    bn_momentum=0.0,
     bn_epsilon=1e-5,
     activation: str = "relu",
     se_ratio=0.25,
