@@ -49,7 +49,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="resnet-rs-keras",
-    version="1.0",
+    version="1.1",
     description="A Keras implementation of Resnet-RS models.",
     long_description=long_description,
     long_description_content_type="text/markdown",
