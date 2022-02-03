@@ -3,7 +3,11 @@ from typing import Callable, Dict, List, Union
 
 import tensorflow as tf
 from absl import logging
-from tensorflow.python.keras.applications import imagenet_utils
+
+if tf.__version__ < "2.8":  # Keras has been moved to separate repository
+    from tensorflow.python.keras.applications import imagenet_utils
+else:
+    from keras.applications import imagenet_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.lib.io import file_io
 
