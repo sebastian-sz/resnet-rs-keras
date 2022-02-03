@@ -1,4 +1,4 @@
-tensorflow>=2.4,<2.8
+tensorflow>=2.4,<2.9
 
 # Lint tool
 pre-commit~=2.15
