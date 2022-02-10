@@ -3,7 +3,7 @@ tf2onnx>=1.8.4,<1.10
 onnxruntime>=1.8.1,<1.11
 
 # Tensorflow Model Optimization Toolkit
-tensorflow-model-optimization~=0.7.0
+tensorflow-model-optimization~=0.7.1
 
 # System info
 psutil~=5.9.0
