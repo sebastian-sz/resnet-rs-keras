@@ -3,4 +3,4 @@ lint:
 
 
 test:
-	python -m unittest -v -f test_resnet_rs/test*.py
+	pytest -x test_resnet_rs/test*.py  # Run all tests except check_output_consistency.py
