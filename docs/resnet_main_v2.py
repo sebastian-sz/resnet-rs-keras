@@ -317,20 +317,20 @@ def get_lr_schedule(train_steps, num_train_images, train_batch_size):
 def learning_rate_schedule(params, current_epoch):
     """Handles linear scaling rule, gradual warmup, and LR decay.
 
-  The learning rate starts at 0, then it increases linearly per step.
-  After 5 epochs we reach the base learning rate (scaled to account
-    for batch size).
-  After 30, 60 and 80 epochs the learning rate is divided by 10.
-  After 90 epochs training stops and the LR is set to 0. This ensures
-    that we train for exactly 90 epochs for reproducibility.
+    The learning rate starts at 0, then it increases linearly per step.
+    After 5 epochs we reach the base learning rate (scaled to account
+      for batch size).
+    After 30, 60 and 80 epochs the learning rate is divided by 10.
+    After 90 epochs training stops and the LR is set to 0. This ensures
+      that we train for exactly 90 epochs for reproducibility.
 
-  Args:
-    params: Python dict containing parameters for this run.
-    current_epoch: `Tensor` for current epoch.
+    Args:
+      params: Python dict containing parameters for this run.
+      current_epoch: `Tensor` for current epoch.
 
-  Returns:
-    A scaled `Tensor` for current learning rate.
-  """
+    Returns:
+      A scaled `Tensor` for current learning rate.
+    """
     scaled_lr = params["base_learning_rate"] * (params["train_batch_size"] / 256.0)
 
     lr_schedule = get_lr_schedule(
@@ -357,14 +357,14 @@ def get_ema_vars():
 def get_pretrained_variables_to_restore(checkpoint_path, load_moving_average=False):
     """Gets veriables_to_restore mapping from pretrained checkpoint.
 
-  Args:
-    checkpoint_path: String. Path of checkpoint.
-    load_moving_average: Boolean, whether load moving average variables to
-      replace variables.
+    Args:
+      checkpoint_path: String. Path of checkpoint.
+      load_moving_average: Boolean, whether load moving average variables to
+        replace variables.
 
-  Returns:
-    Mapping of variables to restore.
-  """
+    Returns:
+      Mapping of variables to restore.
+    """
     checkpoint_reader = tf.train.load_checkpoint(checkpoint_path)
     variable_shape_map = checkpoint_reader.get_variable_to_shape_map()
 
@@ -404,18 +404,18 @@ def get_pretrained_variables_to_restore(checkpoint_path, load_moving_average=Fal
 def resnet_model_fn(features, labels, mode, params):
     """The model_fn for ResNet to be used with TPUEstimator.
 
-  Args:
-    features: `Tensor` of batched images. If transpose_input is enabled, it
-        is transposed to device layout and reshaped to 1D tensor.
-    labels: `Tensor` of labels for the data samples
-    mode: one of `tf.estimator.ModeKeys.{TRAIN,EVAL,PREDICT}`
-    params: `dict` of parameters passed to the model from the TPUEstimator,
-        `params['batch_size']` is always provided and should be used as the
-        effective batch size.
+    Args:
+      features: `Tensor` of batched images. If transpose_input is enabled, it
+          is transposed to device layout and reshaped to 1D tensor.
+      labels: `Tensor` of labels for the data samples
+      mode: one of `tf.estimator.ModeKeys.{TRAIN,EVAL,PREDICT}`
+      params: `dict` of parameters passed to the model from the TPUEstimator,
+          `params['batch_size']` is always provided and should be used as the
+          effective batch size.
 
-  Returns:
-    A `TPUEstimatorSpec` for the model
-  """
+    Returns:
+      A `TPUEstimatorSpec` for the model
+    """
     is_training = mode == tf.estimator.ModeKeys.TRAIN
     inputs = features
     if isinstance(features, dict):
@@ -602,24 +602,24 @@ def resnet_model_fn(features, labels, mode, params):
             def host_call_fn(gs, loss, lr, ce):
                 """Training host call. Creates scalar summaries for training metrics.
 
-        This function is executed on the CPU and should not directly reference
-        any Tensors in the rest of the `model_fn`. To pass Tensors from the
-        model to the `metric_fn`, provide as part of the `host_call`. See
-        https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimatorSpec
-        for more information.
+                This function is executed on the CPU and should not directly reference
+                any Tensors in the rest of the `model_fn`. To pass Tensors from the
+                model to the `metric_fn`, provide as part of the `host_call`. See
+                https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimatorSpec
+                for more information.
 
-        Arguments should match the list of `Tensor` objects passed as the second
-        element in the tuple passed to `host_call`.
+                Arguments should match the list of `Tensor` objects passed as the second
+                element in the tuple passed to `host_call`.
 
-        Args:
-          gs: `Tensor with shape `[batch]` for the global_step
-          loss: `Tensor` with shape `[batch]` for the training loss.
-          lr: `Tensor` with shape `[batch]` for the learning_rate.
-          ce: `Tensor` with shape `[batch]` for the current_epoch.
+                Args:
+                  gs: `Tensor with shape `[batch]` for the global_step
+                  loss: `Tensor` with shape `[batch]` for the training loss.
+                  lr: `Tensor` with shape `[batch]` for the learning_rate.
+                  ce: `Tensor` with shape `[batch]` for the current_epoch.
 
-        Returns:
-          List of summary ops to run on the CPU host.
-        """
+                Returns:
+                  List of summary ops to run on the CPU host.
+                """
                 gs = gs[0]
                 # Host call fns are executed params['iterations_per_loop'] times after
                 # one TPU loop is finished, setting max_queue value to the same as
@@ -656,22 +656,22 @@ def resnet_model_fn(features, labels, mode, params):
         def metric_fn(labels, logits):
             """Evaluation metric function. Evaluates accuracy.
 
-      This function is executed on the CPU and should not directly reference
-      any Tensors in the rest of the `model_fn`. To pass Tensors from the model
-      to the `metric_fn`, provide as part of the `eval_metrics`. See
-      https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimatorSpec
-      for more information.
+            This function is executed on the CPU and should not directly reference
+            any Tensors in the rest of the `model_fn`. To pass Tensors from the model
+            to the `metric_fn`, provide as part of the `eval_metrics`. See
+            https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimatorSpec
+            for more information.
 
-      Arguments should match the list of `Tensor` objects passed as the second
-      element in the tuple passed to `eval_metrics`.
+            Arguments should match the list of `Tensor` objects passed as the second
+            element in the tuple passed to `eval_metrics`.
 
-      Args:
-        labels: `Tensor` with shape `[batch]`.
-        logits: `Tensor` with shape `[batch, num_classes]`.
+            Args:
+              labels: `Tensor` with shape `[batch]`.
+              logits: `Tensor` with shape `[batch, num_classes]`.
 
-      Returns:
-        A dict of the metrics to return from evaluation.
-      """
+            Returns:
+              A dict of the metrics to return from evaluation.
+            """
             predictions = tf.argmax(logits, axis=1)
             top_1_accuracy = tf.metrics.accuracy(labels, predictions)
             in_top_5 = tf.cast(tf.nn.in_top_k(logits, labels, 5), tf.float32)
@@ -707,16 +707,16 @@ def resnet_model_fn(features, labels, mode, params):
 def _verify_non_empty_string(value, field_name):
     """Ensures that a given proposed field value is a non-empty string.
 
-  Args:
-    value:  proposed value for the field.
-    field_name:  string name of the field, e.g. `project`.
+    Args:
+      value:  proposed value for the field.
+      field_name:  string name of the field, e.g. `project`.
 
-  Returns:
-    The given value, provided that it passed the checks.
+    Returns:
+      The given value, provided that it passed the checks.
 
-  Raises:
-    ValueError:  the value is not a string, or is a blank string.
-  """
+    Raises:
+      ValueError:  the value is not a string, or is a blank string.
+    """
     if not isinstance(value, str):
         raise ValueError('Bigtable parameter "%s" must be a string.' % field_name)
     if not value:
@@ -727,9 +727,9 @@ def _verify_non_empty_string(value, field_name):
 def _select_tables_from_flags():
     """Construct training and evaluation Bigtable selections from flags.
 
-  Returns:
-    [training_selection, evaluation_selection]
-  """
+    Returns:
+      [training_selection, evaluation_selection]
+    """
     project = _verify_non_empty_string(
         FLAGS.bigtable_project or FLAGS.gcp_project, "project"
     )
