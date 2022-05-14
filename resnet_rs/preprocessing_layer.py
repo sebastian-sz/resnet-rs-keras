@@ -1,4 +1,9 @@
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
+import tensorflow as tf
+
+if tf.__version__ < "2.8":
+    from tensorflow.keras.layers.experimental.preprocessing import Normalization
+else:
+    from tensorflow.keras.layers import Normalization
 
 
 def get_preprocessing_layer():

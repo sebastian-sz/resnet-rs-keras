@@ -2,14 +2,15 @@ import os
 import tempfile
 from typing import Callable
 
+import numpy as np
 import onnxruntime
 import tensorflow as tf
 import tf2onnx
 from absl.testing import absltest, parameterized
 from psutil import virtual_memory
 
+from test_resnet_rs import utils
 from test_resnet_rs.test_model import TEST_PARAMS
-from test_resnet_rs.utils import get_inference_function
 
 # Some conversions are RAM hungry and will crash CI on smaller machines. We skip those
 # tests, not to break entire CI job.
@@ -48,30 +49,23 @@ class TestONNXConversion(parameterized.TestCase):
                 f"{MODEL_TO_MIN_MEMORY[model_variant]} GB. Skipping... ."
             )
 
-        model = model_fn(
-            weights="imagenet", input_shape=self.input_shape, classifier_activation=None
-        )
+        model = model_fn(weights=None, input_shape=self.input_shape)
 
-        inference_func = get_inference_function(model, self.input_shape[:2])
+        inference_func = utils.get_inference_function(model, self.input_shape[:2])
         self._convert_onnx(inference_func)
 
-        self.assertTrue(os.path.isfile(self.onnx_model_path))
-
-        # Compare outputs:
-        mock_input = self.rng.uniform(shape=(1, *self.input_shape), dtype=tf.float32)
-        original_output = model(mock_input, training=False)
-
+        # Verify outputs:
+        dummy_inputs = self.rng.uniform(shape=(1, *self.input_shape), dtype=tf.float32)
         onnx_session = onnxruntime.InferenceSession(self.onnx_model_path)
-        onnx_inputs = {onnx_session.get_inputs()[0].name: mock_input.numpy()}
-        onnx_output = onnx_session.run(None, onnx_inputs)
+        onnx_inputs = {onnx_session.get_inputs()[0].name: dummy_inputs.numpy()}
+        onnx_output = onnx_session.run(None, onnx_inputs)[0]
 
-        tf.debugging.assert_near(
-            original_output, onnx_output, atol=self._tolerance, rtol=self._tolerance
-        )
+        self.assertTrue(isinstance(onnx_output, np.ndarray))
+        self.assertEqual(onnx_output.shape, (1, 1000))
 
     @staticmethod
     def _enough_memory_to_convert(model_name: str) -> bool:
-        total_ram = virtual_memory().total / (1024.0 ** 3)
+        total_ram = virtual_memory().total / (1024.0**3)
         required_ram = MODEL_TO_MIN_MEMORY[model_name]
         return total_ram >= required_ram
 

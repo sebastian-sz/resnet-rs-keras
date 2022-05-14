@@ -193,4 +193,4 @@ class TestKerasVSOriginalOutputConsistency(parameterized.TestCase):
 
 
 if __name__ == "__main__":
-    absltest.main()
+    absltest.main(failfast=True)

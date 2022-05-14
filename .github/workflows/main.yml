@@ -1,7 +1,7 @@
 name: CI
 on:
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
 
@@ -37,9 +37,27 @@ jobs:
           python-version: '3.7'
       - name: Install
         run: |
+          pip install --upgrade pip
+          pip install tensorflow-cpu
           pip install git+https://github.com/sebastian-sz/resnet-rs-keras@$GITHUB_HEAD_REF
       - name: Import
         run: python -c "from resnet_rs import ResNetRS50"
+
+  check_output_consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: install tensorflow
+        run: |
+          python -m pip install --upgrade pip
+          pip install tensorflow-cpu
+          pip install -e .
+      - name: check consistency
+        run: python test_resnet_rs/check_output_consistency.py
 
   generate_tests_matrix:
     runs-on: ubuntu-latest
@@ -71,4 +89,4 @@ jobs:
           pip install -r test_resnet_rs/requirements.txt
           pip install -e .
       - name: Run tests
-        run: make test
+        run: make test  # Run all tests except check_output_consistency.py
