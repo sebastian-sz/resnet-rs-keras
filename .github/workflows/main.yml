@@ -1,7 +1,7 @@
 name: CI
 on:
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
 
@@ -37,6 +37,8 @@ jobs:
           python-version: '3.7'
       - name: Install
         run: |
+          pip install --upgrade pip
+          pip install tensorflow-cpu
           pip install git+https://github.com/sebastian-sz/resnet-rs-keras@$GITHUB_HEAD_REF
       - name: Import
         run: python -c "from resnet_rs import ResNetRS50"
