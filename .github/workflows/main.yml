@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - name: lint code
         run: |
           pip install -r requirements.txt
@@ -34,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - name: Install
         run: |
           pip install --upgrade pip
@@ -50,7 +50,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - name: install tensorflow
         run: |
           python -m pip install --upgrade pip
@@ -78,10 +78,10 @@ jobs:
         tensorflow-version: ${{fromJson(needs.generate_tests_matrix.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
+      - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Install dependencies (TF version ${{ matrix.tensorflow-version }})
         run: |
           python -m pip install --upgrade pip
