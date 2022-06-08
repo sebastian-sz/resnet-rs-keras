@@ -40,10 +40,11 @@ class TestTFLiteConversion(parameterized.TestCase):
     def test_tflite_conversion(self, model_fn: Callable):
         # Skip test if not enough RAM:
         model_variant = self._testMethodName.split("-")[-1]
-        if not self._enough_memory_to_convert(model_variant):
+        minimum_required_ram = MODEL_TO_MIN_MEMORY[model_variant]
+        if not utils.is_enough_memory(minimum_required_ram):
             self.skipTest(
-                "Not enough memory to convert to tflite. Need at least "
-                f"{MODEL_TO_MIN_MEMORY[model_variant]} GB. Skipping... ."
+                "Not enough memory to perform this test. Need at least "
+                f"{minimum_required_ram} GB. Skipping... ."
             )
 
         model = model_fn(weights=None, input_shape=self.input_shape)
@@ -78,12 +79,6 @@ class TestTFLiteConversion(parameterized.TestCase):
         interpreter.invoke()
 
         return interpreter.get_tensor(output_details[0]["index"])
-
-    @staticmethod
-    def _enough_memory_to_convert(model_name: str) -> bool:
-        total_ram = virtual_memory().total / (1024.0**3)
-        required_ram = MODEL_TO_MIN_MEMORY[model_name]
-        return total_ram >= required_ram
 
 
 if __name__ == "__main__":
