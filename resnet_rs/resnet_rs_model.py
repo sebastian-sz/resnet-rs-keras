@@ -3,11 +3,14 @@ from typing import Callable, Dict, List, Union
 
 import tensorflow as tf
 from absl import logging
+from packaging import version
 
-if tf.__version__ < "2.8":  # Keras has been moved to separate repository
+# Keras has been moved to separate repository
+if version.parse(tf.__version__) < version.parse("2.8"):
     from tensorflow.python.keras.applications import imagenet_utils
 else:
     from keras.applications import imagenet_utils
+
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.lib.io import file_io
 
@@ -326,7 +329,7 @@ def BlockGroup(
 def ResNetRS(
     depth: int,
     input_shape=(None, None, 3),
-    bn_momentum=0.0,
+    bn_momentum=0.99,  # original repo uses EMA and bn_momentum=0.
     bn_epsilon=1e-5,
     activation: str = "relu",
     se_ratio=0.25,
