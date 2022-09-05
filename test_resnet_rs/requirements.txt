@@ -9,4 +9,4 @@ onnxruntime>=1.8.1,<1.12
 tensorflow-model-optimization~=0.7.2
 
 # System info
-psutil~=5.9.1
+psutil~=5.9.2
