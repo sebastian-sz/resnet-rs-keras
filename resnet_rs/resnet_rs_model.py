@@ -5,13 +5,18 @@ import tensorflow as tf
 from absl import logging
 from packaging import version
 
-# Keras has been moved to separate repository
+# Keras has been moved to separate repository in 2.9
 if version.parse(tf.__version__) < version.parse("2.8"):
     from tensorflow.python.keras.applications import imagenet_utils
 else:
     from keras.applications import imagenet_utils
 
-from tensorflow.python.keras.utils import layer_utils
+# tensorflow.python.keras is removed in 2.12
+if version.parse(tf.__version__) < version.parse("2.12"):
+    from tensorflow.python.keras.utils import layer_utils
+else:
+    from keras.utils import layer_utils
+
 from tensorflow.python.lib.io import file_io
 
 from resnet_rs.block_args import BLOCK_ARGS
