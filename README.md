@@ -1,4 +1,14 @@
-Resnet-RS models rewritten in Tensorflow / Keras functional API.
+# Achive Note
+The models in this repo can be used from Keras directly.  
+The only difference is that Keras implementation already includes preprocessing.
+```python
+from tensorflow.keras.applications.resnet_rs import ResNetRS50 import ResNetRS50
+```
+
+I am archiving this repository as the maintenance overhead, for a duplicated functionality is not worth it.
+
+You can still use this repository if you like it, but if something breaks due to Tensorflow/Keras update I probably won't
+be able to dedicate my time to fix it.
 
 # Table of contents
 1. [Introduction](https://github.com/sebastian-sz/resnet-rs-keras#introduction)
